@@ -104,6 +104,12 @@
       "languageVersion": "2.3"
     },
     {
+      "name": "intl",
+      "rootUri": "file:///Users/willyangeraldo/.pub-cache/hosted/pub.dartlang.org/intl-0.16.1",
+      "packageUri": "lib/",
+      "languageVersion": "2.5"
+    },
+    {
       "name": "io",
       "rootUri": "file:///Users/willyangeraldo/.pub-cache/hosted/pub.dartlang.org/io-0.3.3",
       "packageUri": "lib/",
@@ -374,7 +380,7 @@
       "languageVersion": "2.0"
     }
   ],
-  "generated": "2020-04-01T06:44:53.690881Z",
+  "generated": "2020-04-02T03:53:26.718533Z",
   "generator": "pub",
   "generatorVersion": "2.7.2"
 }

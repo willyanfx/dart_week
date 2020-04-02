@@ -1,3 +1,5 @@
+import 'package:backend/routers/categoria_router.dart';
+import 'package:backend/routers/movimentacoes_router.dart';
 import 'package:backend/routers/usuario_router.dart';
 
 import 'backend.dart';
@@ -38,6 +40,8 @@ class BackendChannel extends ApplicationChannel {
     final router = Router();
 
     UsuarioRouter.configurar(router, context);
+    CategoriaRouter.configurar(router, context);
+    MovimentacoesRouter.configurar(router, context);
 
     return router;
   }

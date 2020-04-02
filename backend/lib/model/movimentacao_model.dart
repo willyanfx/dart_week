@@ -12,6 +12,12 @@ class _MovimentacaoModel {
   int id;
 
   @Column()
+  String descricao;
+
+  @Column()
+  double valor;
+
+  @Column()
   DateTime dataMovimentacao;
 
   @Relate(#movimentacoes)

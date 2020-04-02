@@ -1,7 +1,11 @@
 import 'dart:convert';
+import 'package:backend/Controllers/login/dto/login_request.dart';
+import 'package:backend/Controllers/usuario/dto/cadastrar_usuario_request.dart';
+import 'package:backend/model/usuario_model.dart';
+import 'package:backend/utils/criptografia_util.dart';
+import 'package:backend/utils/jwt_utils.dart';
 import 'package:crypto/crypto.dart';
 
-import 'package:backend/Controllers/login/login_request.dart';
 import 'package:backend/repository/usuario_repository.dart';
 
 import '../backend.dart';
@@ -16,12 +20,24 @@ class UsuarioService {
     final String login = request.login;
     final String senha = request.senha;
 
-    final senhaBytes = utf8.encode(senha);
-    final String senhaCriptografada = sha256.convert(senhaBytes).toString();
+    final String senhaCriptografada =
+        CriptografiaUtils.criptografarSenha(senha);
 
     final usuario = await usuarioRepository.recuperarUsuarioPorLoginESenha(
         login, senhaCriptografada);
 
-    return usuario?.login;
+    if (usuario != null) {
+      return JwtUtils.gerarTokenJWT(usuario);
+    }
+
+    return null;
+  }
+
+  Future<void> salvarUsuario(CadastrarUsuarioRequest request) async {
+    return await usuarioRepository.salvarUsuario(request);
+  }
+
+  Future<UsuarioModel> buscarPorId(int id) async {
+    return await usuarioRepository.buscarPorId(id);
   }
 }
