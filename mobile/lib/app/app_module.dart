@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:mobile/app/app_widget.dart';
 import 'package:mobile/app/modules/home/home_module.dart';
 import 'package:mobile/app/modules/login/login_module.dart';
+import 'package:mobile/app/modules/movimentacoes/movimentacoes_module.dart';
 
 class AppModule extends MainModule {
   @override
@@ -15,6 +16,7 @@ class AppModule extends MainModule {
   List<Router> get routers => [
         Router(Modular.initialRoute, module: HomeModule()),
         Router('/login', module: LoginModule()),
+        Router('/movimentacoes', module: MovimentacoesModule()),
       ];
 
   @override
