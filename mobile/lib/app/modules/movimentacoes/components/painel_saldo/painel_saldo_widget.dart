@@ -1,7 +1,12 @@
+import 'dart:io';
+import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:flutter_modular/flutter_modular.dart';
+import 'package:mobile/app/core/store_state.dart';
 import 'package:mobile/app/modules/movimentacoes/components/painel_saldo/painel_saldo_controller.dart';
 import 'package:mobile/app/utils/size_utils.dart';
+import 'package:mobx/mobx.dart';
 import 'package:sliding_sheet/sliding_sheet.dart';
 
 class PainelSaldoWidget extends StatefulWidget {
@@ -15,115 +20,177 @@ class PainelSaldoWidget extends StatefulWidget {
 
 class _PainelSaldoWidgetState
     extends ModularState<PainelSaldoWidget, PainelSaldoController> {
+  List<ReactionDisposer> disposers;
+
+  @override
+  void initState() {
+    super.initState();
+    disposers ??= [
+      reaction((_) => controller.data, (_) => controller.buscarTotalDoMes())
+    ];
+    controller.buscarTotalDoMes();
+  }
+
   @override
   Widget build(BuildContext context) {
     return SlidingSheet(
-        elevation: 16,
-        shadowColor: Color.fromRGBO(0, 0, 0, 0.2),
-        cornerRadius: 30,
-        snapSpec: SnapSpec(
-            snap: true,
-            snappings: [0.1, 0.4],
-            positioning: SnapPositioning.relativeToAvailableSpace),
-        headerBuilder: (_, state) {
-          return Container(
-            width: 60,
-            height: 5,
-            decoration: BoxDecoration(
-                color: Colors.black45, borderRadius: BorderRadius.circular(20)),
-          );
-        },
-        builder: (_, state) {
-          return _makeContent();
+      elevation: 8,
+      cornerRadius: 30,
+      snapSpec: SnapSpec(
+          snap: true,
+          snappings: [0.1, 0.4],
+          positioning: SnapPositioning.relativeToAvailableSpace),
+      headerBuilder: (_, state) {
+        return Container(
+          width: 60,
+          height: 5,
+          decoration: BoxDecoration(
+            color: Colors.grey,
+            borderRadius: BorderRadius.circular(20),
+          ),
+        );
+      },
+      builder: (_, state) {
+        return Observer(builder: (_) {
+          switch (controller.totalsTate) {
+            case StoreState.initial:
+            case StoreState.loading:
+              return Container(
+                height: SizeUtils.heightScreen,
+                alignment: Alignment.topCenter,
+                child: Container(
+                  margin: EdgeInsets.only(top: 30),
+                  child: CircularProgressIndicator(),
+                ),
+              );
+            case StoreState.loaded:
+              return _makeContent();
+            case StoreState.error:
+              return Text(controller.errorMessage);
+          }
+          return Container();
         });
+      },
+    );
   }
 
   Widget _makeContent() {
+    var model = controller.movimentacaoTotalModel;
+    var numberFormat = NumberFormat('###.00', 'pt_BR');
     return Container(
-        width: SizeUtils.widthScreen,
-        height: SizeUtils.heightScreen * .4 - widget.appBarHeight,
-        child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.center,
+      width: SizeUtils.widthScreen,
+      height: SizeUtils.heightScreen * .4 - widget.appBarHeight,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: <Widget>[
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
-              Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+              IconButton(
+                onPressed: () => controller.previousMonth(),
+                icon: Icon(Icons.arrow_back_ios),
+              ),
+              Text(
+                DateFormat.yMMMM('pt_BR').format(controller.data),
+                style: TextStyle(
+                    fontSize: 25,
+                    fontWeight: FontWeight.bold,
+                    color: model.saldo < 0 ? Colors.red : Colors.green),
+              ),
+              IconButton(
+                onPressed: () => controller.nextMonth(),
+                icon: Icon(Icons.arrow_forward_ios),
+              ),
+            ],
+          ),
+          SizedBox(
+            // height: Platform.isIOS ? 60 : 30,
+            height: Platform.isIOS ? 60 : 30,
+          ),
+          Column(
+            children: <Widget>[
+              Text('Saldo'),
+              Text(
+                'R\$ ${model.saldo != null ? numberFormat.format(model.saldo) : '-'}',
+                style: TextStyle(
+                    fontSize: 30,
+                    fontWeight: FontWeight.bold,
+                    color: model.saldo < 0 ? Colors.red : Colors.green),
+              )
+            ],
+          ),
+          Expanded(
+            child: Container(),
+          ),
+          Container(
+            margin: EdgeInsets.only(bottom: Platform.isIOS ? 30 : 10),
+            padding: EdgeInsets.symmetric(horizontal: 20),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: <Widget>[
+                Row(
                   children: <Widget>[
-                    IconButton(icon: Icon(Icons.arrow_back_ios)),
-                    Text(
-                      'janeiro 2020',
-                      style: TextStyle(
-                          fontSize: 25,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.green),
+                    Padding(
+                      padding: const EdgeInsets.only(right: 8.0),
+                      child: CircleAvatar(
+                        backgroundColor: Color(0xFF4BCE97),
+                        foregroundColor: Colors.white,
+                        child: Icon(Icons.arrow_upward),
+                      ),
                     ),
-                    IconButton(icon: Icon(Icons.arrow_forward_ios))
-                  ]),
-              SizedBox(height: 60),
-              Column(children: <Widget>[
-                Text('Saldo'),
-                Text(
-                  'R\$ 3000',
-                  style: TextStyle(
-                      fontSize: 30,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.green),
-                ),
-              ]),
-              Expanded(child: Container()),
-              Container(
-                  margin: EdgeInsets.only(bottom: 30),
-                  padding: EdgeInsets.symmetric(horizontal: 20),
-                  child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: <Widget>[
-                        Row(children: <Widget>[
-                          Padding(
-                              padding: const EdgeInsets.only(right: 8),
-                              child: CircleAvatar(
-                                backgroundColor: Colors.amber,
-                                foregroundColor: Colors.white,
-                                child: Icon(Icons.arrow_upward),
-                              )),
-                          Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: <Widget>[
-                                Text(
-                                  'Receitas',
-                                  style: TextStyle(
-                                      fontSize: 14, color: Colors.green),
-                                ),
-                                Text(
-                                  'R\$ 4000',
-                                  style: TextStyle(
-                                      fontSize: 14, color: Colors.green),
-                                )
-                              ])
-                        ]),
-                        Row(children: <Widget>[
-                          Padding(
-                              padding: const EdgeInsets.only(right: 8),
-                              child: CircleAvatar(
-                                backgroundColor: Colors.amber,
-                                foregroundColor: Colors.white,
-                                child: Icon(Icons.arrow_upward),
-                              )),
-                          Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: <Widget>[
-                                Text(
-                                  'Despesas',
-                                  style: TextStyle(
-                                      fontSize: 14, color: Colors.red),
-                                ),
-                                Text(
-                                  'R\$ 4000',
-                                  style: TextStyle(
-                                      fontSize: 14, color: Colors.red),
-                                )
-                              ])
-                        ])
-                      ]))
-            ]));
+                        Text(
+                          'Receitas',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Color(0xFF4BCE97),
+                          ),
+                        ),
+                        Text(
+                          'R\$ ${numberFormat.format(model.receitas.total)}',
+                          style:
+                              TextStyle(fontSize: 14, color: Color(0xFF4BCE97)),
+                        ),
+                      ],
+                    )
+                  ],
+                ),
+                Row(
+                  children: <Widget>[
+                    Padding(
+                      padding: const EdgeInsets.only(right: 8.0),
+                      child: CircleAvatar(
+                        backgroundColor: Colors.red,
+                        foregroundColor: Colors.white,
+                        child: Icon(Icons.arrow_downward),
+                      ),
+                    ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Text(
+                          'Despesas',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.red,
+                          ),
+                        ),
+                        Text(
+                          'R\$ ${numberFormat.format(model.despesas.total)}',
+                          style: TextStyle(fontSize: 14, color: Colors.red),
+                        ),
+                      ],
+                    )
+                  ],
+                ),
+              ],
+            ),
+          )
+        ],
+      ),
+    );
   }
 }
